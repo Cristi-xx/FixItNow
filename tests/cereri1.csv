@@ -1,0 +1,14 @@
+Tip,Marca,Model,An,Pret,ValNumeric,AtributText,OptBool,Complexitate,Ora
+Televizor,Samsung,OLED-50,2022,3000,127,cm,false,3,10:30
+Frigider,Arctic,Frost-X,2020,2000,0,,true,2,11:45
+MasinaSpalat,LG,WashMaster,2021,2500,7,,false,4,14:20
+Televizor,Sony,Bravia,2021,3200,108,cm,false,2,09:15
+Frigider,Samsung,CoolMax,2019,2800,0,,true,4,08:00
+MasinaSpalat,Arctic,Clean5,2023,1500,6.5,,false,1,13:00
+Televizor,LG,OledX,2024,4500,55,inch,false,5,15:30
+Frigider,Beko,NeoFrost,2018,1800,0,,false,3,12:00
+MasinaSpalat,Samsung,EcoBubble,2022,2200,9,,false,2,10:00
+Televizor,Philips,Ambilight,2020,2500,120,cm,false,3,16:45
+Frigider,Whirlpool,SixthSense,2017,2100,0,,true,5,07:30
+MasinaSpalat,Bosch,Serie6,2021,3500,8,,false,4,11:15
+Televizor,Panasonic,Viera,2019,1900,42,inch,false,1,14:50
