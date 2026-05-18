@@ -1,0 +1,271 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam packageStyle frame
+
+' --- MODULUL SALARIZARE (Pattern: Decorator) ---
+package "Salarizare (Decorator)" {
+    interface ICalculSalariu <<interface>> {
+        + {abstract} getValoare() const : double
+    }
+
+    class SalariuDeBaza {
+        + getValoare() const override : double
+    }
+
+    abstract class Decorator_Salariu {
+        # componenta : shared_ptr<ICalculSalariu>
+        + explicit Decorator_Salariu(comp : shared_ptr<ICalculSalariu>)
+        + getValoare() const override : double
+    }
+
+    class BonusFidelitate {
+        - ani_vechime : int
+        + BonusFidelitate(comp : shared_ptr<ICalculSalariu>, ani : int)
+        + getValoare() const override : double
+    }
+    
+    class BonusTransport {
+        + explicit BonusTransport(comp : shared_ptr<ICalculSalariu>)
+        + getValoare() const override : double
+    }
+    
+    class BonusTehnician {
+        - tehnician : shared_ptr<Tehnician>
+        + BonusTehnician(comp : shared_ptr<ICalculSalariu>, teh : shared_ptr<Tehnician>)
+        + getValoare() const override : double
+    }
+    
+    class SporConducere {
+        + explicit SporConducere(comp : shared_ptr<ICalculSalariu>)
+        + getValoare() const override : double
+    }
+
+    ICalculSalariu <|.. SalariuDeBaza
+    ICalculSalariu <|.. Decorator_Salariu
+    Decorator_Salariu o-- ICalculSalariu : decorează
+    Decorator_Salariu <|-- BonusFidelitate
+    Decorator_Salariu <|-- BonusTransport
+    Decorator_Salariu <|-- BonusTehnician
+    Decorator_Salariu <|-- SporConducere
+}
+
+' --- MODULUL ANGAJAȚI ---
+package "Resurse Umane" {
+    abstract class Angajat {
+        # {static} Contor_Id : int
+        # ID : int
+        # nume, prenume, CNP : string
+        # data_angajarii, oras_domiciliu : string
+        # calcul_salariu : shared_ptr<ICalculSalariu>
+        --
+        + Calculeaza_Salariu() const : double
+        + {abstract} getTip() const : string
+        + validare_CNP() const : bool
+        + validareNume() const : bool
+        + esteValid() const : bool
+        + Vechime() const : int
+        + get_Id() const : int
+        + get_Cnp() const : string
+        + get_Nume() const : string
+        + get_Domiciliu() const : string
+        + setSistemSalarizare(shared_ptr<ICalculSalariu>)
+        + set_Nume(n : string)
+        + set_Prenume(p : string)
+    }
+
+    class Receptioner {
+        - ID_cereri_inregistrate : vector<int>
+        + Receptioner(n, p, cnp, data, oras : string)
+        + Adauga_Cerere(ID : int)
+        + Date_Angajat() const override
+        + getTip() const override : string
+    }
+
+    class Tehnician {
+        - specializari : vector<pair<string,string>>
+        - valoare_totala_reparatii : double
+        - numar_cereri_active : int
+        - durata_totala_munca_depusa : int
+        --
+        + Tehnician(n, p, cnp, data, oras : string, spec : vector<pair>)
+        + adauga_Specializare(spec : pair<string,string>)
+        + getValoareReparatii() const : double
+        + getNumarCereriActive() const : int
+        + adaugareCerereActiva()
+        + retragereCerereActiva()
+        + Modifica_durata_totala_munca_depusa(ore : int)
+        + getDurataMuncaDepusa() const : int
+        + poateRepara(tip, marca : string) const : bool
+        + Adauga_Valoare_Reparatie(val : double)
+        + Date_Angajat() const override
+        + getTip() const override : string
+    }
+
+    class Supervizor {
+        + Supervizor(n, p, cnp, data, oras : string)
+        + getTip() const override : string
+        + Date_Angajat() const override
+    }
+
+    Angajat <|-- Receptioner
+    Angajat <|-- Tehnician
+    Angajat <|-- Supervizor
+    Angajat o-- ICalculSalariu : "folosește pentru calcul"
+    BonusTehnician --> Tehnician : "interoghează date"
+}
+
+' --- MODULUL ELECTROCASNICE ---
+package "Inventar & Produse" {
+    abstract class Electrocasnic {
+        - tip, marca, model : string
+        - an_fabricatie : int
+        - pret_catalog : double
+        --
+        + Electrocasnic(t, m, mod : string, an : int, p : double)
+        + {abstract} descriere() const : string
+        + get_Vechime() const : int
+        + getTip() const : string
+        + getMarca() const : string
+        + getModel() const : string
+        + getPret() const : double
+    }
+
+    class Frigider {
+        - areCongelator : bool
+        + Frigider(marca, model : string, an : int, pret : double, congelator : bool)
+        + descriere() const override : string
+    }
+    
+    class MasinaSpalat {
+        - capacitateKg : double
+        + MasinaSpalat(marca, model : string, an : int, pret : double, cap : double)
+        + descriere() const override : string
+    }
+    
+    class Televizor {
+        - diagonala : double
+        - unitate : string
+        + Televizor(marca, model : string, an : int, pret : double, diag : double, u : string)
+        + descriere() const override : string
+    }
+
+    class CatalogElectrocasnice {
+        - date : map<string, map<string, vector<string>>>
+        --
+        + adaugaModel(tip, marca, model : string)
+        + stergeModel(tip, marca, model : string)
+        + esteReparabil(tip, marca, model : string) const : bool
+        + stergeElement(mod : int, tip, marca, model : string)
+    }
+
+    Electrocasnic <|-- Frigider
+    Electrocasnic <|-- MasinaSpalat
+    Electrocasnic <|-- Televizor
+}
+
+' --- MODULUL CORE & FACTORY ---
+package "Service Management Core" {
+    class CereriReparatie {
+        - {static} ContorID : int
+        - id : int
+        - timestamp : time_t
+        - complexitate, durataEstimata : int
+        - durataInitiala : int
+        - pretTotal : double
+        - aparat : unique_ptr<Electrocasnic>
+        - tehnicianAsignat : shared_ptr<Tehnician>
+        --
+        + CereriReparatie(aparat : unique_ptr<Electrocasnic>, complexitate : int, timestamp : time_t)
+        + proceseazaTic()
+        + esteFinalizata() const : bool
+        + afiseazaStatus() const
+        + getId() const : int
+        + getPret() const : double
+        + getTimestamp() const : time_t
+        + getDurata() const : int
+        + getDurataInitiala() const : int
+        + getVechime() const : int
+        + getTipAparat() const : string
+        + getMarcaAparat() const : string
+        + getModelAparat() const : string
+        + setTehnicianAsignat(t : shared_ptr<Tehnician>)
+        + getTehnicianAsignat() : shared_ptr<Tehnician>
+    }
+
+    class ServiceManager << (S,#FF7700) Singleton >> {
+        - personal : vector<shared_ptr<Angajat>>
+        - cereriAsteptare, cereriActive, cereriFinalizate : vector<CereriReparatie>
+        - cereriRespinse : vector<CereriReparatie>
+        - catalog : CatalogElectrocasnice
+        - indexUltimulReceptioner : int
+        - {static} instanta : ServiceManager*
+        --
+        - ServiceManager()
+        - ServiceManager(const ServiceManager&) = delete
+        - ServiceManager& operator=(const ServiceManager&) = delete
+        --
+        {static} + getInstance() : ServiceManager&
+        + EsteServiceFunctional() const : bool
+        + adaugaAngajat(a : shared_ptr<Angajat>)
+        + adaugaAngajatManual()
+        + adaugaAngajatiDinFisier(numefisier : string)
+        + stergeAngajat()
+        + stergeAngajat(identificator : string)
+        + Afisare_lista_angajati() const
+        + afisare_completa_angajati() const
+        + existaCNP(cnpCautat : string) : bool
+        + adaugaCerere(c : CereriReparatie)
+        + adaugaCerereDinFisier(numefisier : string)
+        + adaugaCerereManual()
+        + incarcaCatalogDinFisier(numefisier : string)
+        + adaugaModelManual()
+        + stergeDinCatalog(mod : int, tip, marca, model : string)
+        + executaSimulareCompleta()
+        + simulareTic()
+        + alocareAutomata()
+        + afiseazaStatus() const
+        + proceseazaUnTic(numarTicCurent : int&)
+        + getUrmatorulReceptioner() : shared_ptr<Receptioner>
+        + gasesteAngajat(identificator : string) : shared_ptr<Angajat>
+        + raportTop3Salarii()
+        + raportTehnicianRecord()
+        + raportCereriAsteptareGrupate()
+        + raportareCSV(numeFisier : string) const
+        + getCereriAsteptareSize() const : size_t
+        + getCereriActiveSize() const : size_t
+    }
+
+    class AngajatFactory {
+        {static} + creeazaAngajat(d : const DateAngajat&) : shared_ptr<Angajat>
+    }
+
+    class ElectrocasnicFactory {
+        {static} + creeazaAparat(d : const DateElectrocasnic&, catalog : const CatalogElectrocasnice&) : unique_ptr<Electrocasnic>
+    }
+
+    struct DateAngajat {
+        + tip, nume, prenume, cnp, dataAngajare, oras : string
+        + specializari : vector<pair<string, string>>
+    }
+
+    struct DateElectrocasnic {
+        + tip, marca, model, atributText : string
+        + anFabricatie : int
+        + pretCatalog, valNumeric : double
+        + optiuneBool : bool
+    }
+}
+
+' --- RELAȚII GLOBALE ---
+ServiceManager "1" *-- "*" Angajat
+ServiceManager "1" *-- "*" CereriReparatie
+ServiceManager "1" *-- "1" CatalogElectrocasnice
+CereriReparatie "1" *-- "1" Electrocasnic : "deține aparatul"
+CereriReparatie "1" o-- "0..1" Tehnician : "este asignată lui"
+AngajatFactory ..> DateAngajat : "folosește"
+ElectrocasnicFactory ..> DateElectrocasnic : "folosește"
+AngajatFactory ..> Angajat : "creează"
+ElectrocasnicFactory ..> Electrocasnic : "creează"
+
+@enduml
